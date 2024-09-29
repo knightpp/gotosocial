@@ -51,13 +51,17 @@ func Authed(c *gin.Context, requireToken bool, requireApp bool, requireUser bool
 	var i interface{}
 	var ok bool
 
+	var authErr error
 	i, ok = ctx.Get(SessionAuthorizedToken)
 	if ok {
-		parsed, ok := i.(oauth2.TokenInfo)
-		if !ok {
+		switch value := i.(type) {
+		case oauth2.TokenInfo:
+			a.Token = value
+		case error:
+			authErr = value
+		default:
 			return nil, errors.New("could not parse token from session context")
 		}
-		a.Token = parsed
 	}
 
 	i, ok = ctx.Get(SessionAuthorizedApplication)
@@ -88,6 +92,9 @@ func Authed(c *gin.Context, requireToken bool, requireApp bool, requireUser bool
 	}
 
 	if requireToken && a.Token == nil {
+		if authErr != nil {
+			return nil, authErr
+		}
 		return nil, errors.New("token not supplied")
 	}
 

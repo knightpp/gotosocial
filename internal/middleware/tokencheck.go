@@ -61,6 +61,7 @@ func TokenCheck(dbConn db.DB, validateBearerToken func(r *http.Request) (oauth2.
 		ti, err := validateBearerToken(c.Copy().Request)
 		if err != nil {
 			log.Debugf(ctx, "token was passed in Authorization header but we could not validate it: %s", err)
+			c.Set(oauth.SessionAuthorizedToken, err)
 			return
 		}
 		c.Set(oauth.SessionAuthorizedToken, ti)

@@ -67,12 +67,16 @@ func TokenAuth(
 
 	i, ok = ctx.Get(oauth.SessionAuthorizedToken)
 	if ok {
-		parsed, ok := i.(oauth2.TokenInfo)
-		if !ok {
-			const errText = "could not parse token from session context"
+		const errText = "could not parse token from session context"
+
+		switch v := i.(type) {
+		case oauth2.TokenInfo:
+			a.Token = v
+		case error:
+			return nil, gtserror.NewErrorUnauthorized(v, errText)
+		default:
 			return nil, gtserror.NewErrorUnauthorized(errors.New(errText), errText)
 		}
-		a.Token = parsed
 	}
 
 	i, ok = ctx.Get(oauth.SessionAuthorizedApplication)
